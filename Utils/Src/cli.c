@@ -123,10 +123,9 @@ const sTermEntry_t rebootEntry =
 
 void jumpBoot(uint8_t argc, char **argv)
 {
-    printf("Boot mode...Not implemented yet\n");
-
-
-//    HAL_Delay(100);
+	printf("Jumping to ROM boot loader\n");
+    HAL_Delay(100);
+    HAL_DeInit();
 //
 //
 //    printf("Bye\n");
@@ -136,24 +135,24 @@ void jumpBoot(uint8_t argc, char **argv)
 //    HAL_Delay(5);
 //
 //    HAL_RCC_DeInit();
-//
-//    SysTick->CTRL = 0;
-//    SysTick->LOAD = 0;
-//    SysTick->VAL = 0;
-//
-//    typedef void (*funcPtr)(void);
-//    uint32_t system_memory = 0x1FFFF000;
-//    uint32_t jumpAddr = *(volatile uint32_t *)(system_memory + 0x04); /* reset ptr in vector table */
-//
-//    funcPtr usrMain = (funcPtr) jumpAddr;
-//
-//    SCB->VTOR = (volatile uint32_t)system_memory;
-//
-//    /* Initialize user application's Stack Pointer */
-//    //__set_MSP(*(__IO uint32_t*) 0x1FFFF000);
-//    asm volatile("msr msp, %0"::"g"(*(volatile uint32_t *)system_memory));
 
-//    usrMain();
+    SysTick->CTRL = 0;
+    SysTick->LOAD = 0;
+    SysTick->VAL = 0;
+
+    typedef void (*funcPtr)(void);
+    uint32_t system_memory = 0x1FFFF000;
+    uint32_t jumpAddr = *(volatile uint32_t *)(system_memory + 0x04); /* reset ptr in vector table */
+
+    funcPtr usrMain = (funcPtr) jumpAddr;
+
+    SCB->VTOR = (volatile uint32_t)system_memory;
+
+    /* Initialize user application's Stack Pointer */
+    //__set_MSP(*(__IO uint32_t*) 0x1FFFF000);
+    asm volatile("msr msp, %0"::"g"(*(volatile uint32_t *)system_memory));
+
+    usrMain();
 }
 
 const sTermEntry_t bootEntry =

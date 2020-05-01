@@ -28,6 +28,7 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "usbd_cdc_if.h"
+#include "Utils/terminal.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -96,12 +97,20 @@ int main(void)
   /* USER CODE BEGIN 2 */
 
   printf("House Power Monitor\n");
+  setbuf(stdout, NULL);
+  terminal_init("pwr$ ");
+
+  USART1->CR1 |= USART_CR1_RXNEIE;
+  USART1->CR3 |= USART_CR3_EIE;
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		terminal_run();
+		HAL_Delay(100);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
