@@ -4,14 +4,16 @@
  *  Created on: May 1, 2020
  *      Author: jerasmus
  */
-#include "Utils/cli.h"
+#include <stdio.h>
 
-extern void adc_sample();
+#include "Utils/cli.h"
+#include "pwr_monitor.h"
 
 void adcDebug(uint8_t argc, char **argv)
 {
-  printf("Sampling Vin...\n");
-  adc_sample();
+  float vin, current;
+  pwr_monitor_get(&vin, &current);
+  printf("Power Monitor: %4.4f V %4.4f A\n", vin, current);
 }
 
 const sTermEntry_t adcEntry =
