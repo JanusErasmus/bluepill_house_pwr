@@ -9,11 +9,10 @@
 
 #include "adc.h"
 #include "tim.h"
-#include "nokia_lcd.h"
 
 #define PWR_SAMPLE_RATE 2000
 
-static int adc_start = 0;
+static volatile int adc_start = 0;
 static volatile int adc_sampled = 0;
 static int adc_index = 0;
 static uint16_t adc_samples[160];
@@ -22,19 +21,23 @@ static float raw_current[80];
 static int measure_index = 0;
 static float vin_measure[8];
 static float current_measure[8];
-static float _vin = 0;
-static float _current = 0;
+static float _vin = -9;
+static float _current = -9;
 static uint32_t tick = 0;
 
-void pwr_monitor_get(float *vin, float *current)
+int pwr_monitor_get(float *vin, float *current)
 {
+  if((_vin < 0) || (_current < 0))
+    return 0;
+
   *vin = _vin;
   *current = _current;
+
+  return 1;
 }
 
 void pwr_monitor_init()
 {
-  tick = HAL_GetTick() + PWR_SAMPLE_RATE;
 }
 
 void pwr_monitor_run()
@@ -42,8 +45,7 @@ void pwr_monitor_run()
   if(tick < HAL_GetTick())
   {
     tick = HAL_GetTick() + PWR_SAMPLE_RATE;
-
-    lcd_set_pwr(_vin, _current);
+    HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
 
     if(adc_start <= 0)
     {
@@ -98,8 +100,8 @@ void pwr_monitor_run()
     mean_vin /= 80.0;
     mean_current /= 80.0;
 
-    float vin = sqrtf(mean_vin) * 368.0;
-    float current = sqrtf(mean_current) * 25.8;
+    float vin = sqrtf(mean_vin) * 361.202;
+    float current = sqrtf(mean_current) * 25.0;
     // printf("V: %5.4f A: %5.4f\n", vin, current);
 
     vin_measure[measure_index] = vin;
@@ -132,13 +134,23 @@ void pwr_monitor_run()
   }
 }
 
+int pwr_monitor_busy()
+{
+  if(adc_start > 0)
+    return 1;
+
+  return 0;
+}
+
 void HAL_TIM_OC_DelayElapsedCallback(TIM_HandleTypeDef *htim)
 {
   // HAL_GPIO_TogglePin(SAMPLE_PULSE_GPIO_Port, SAMPLE_PULSE_Pin);
   if(adc_index >= 160)
   {
     if(adc_start <= 0)
+    {
       HAL_TIM_OC_Stop_IT(&htim1, TIM_CHANNEL_1);
+    }
 
     adc_sampled = 1;
     adc_index = 0;

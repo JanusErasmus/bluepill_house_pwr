@@ -21,6 +21,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
+#include "rtc.h"
 #include "spi.h"
 #include "tim.h"
 #include "usart.h"
@@ -34,6 +35,7 @@
 #include "Utils/terminal.h"
 #include "nokia_lcd.h"
 #include "pwr_monitor.h"
+#include "wrap_cpp.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -93,22 +95,30 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USB_DEVICE_Init();
+//  MX_USB_DEVICE_Init();
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
-  MX_USART3_UART_Init();
   MX_TIM1_Init();
+  MX_RTC_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
   printf("House Power Monitor\n");
+  printf("SYSCLOCK: %lu Hz\n", HAL_RCC_GetSysClockFreq());
+  printf("HCLOCK  : %lu Hz\n", HAL_RCC_GetHCLKFreq());
+  printf("APB1    : %lu Hz\n", HAL_RCC_GetPCLK1Freq());
+  printf("APB2    : %lu Hz\n", HAL_RCC_GetPCLK2Freq());
   setbuf(stdout, NULL);
   terminal_init("pwr$ ");
 
   USART1->CR1 |= USART_CR1_RXNEIE;
   USART1->CR3 |= USART_CR3_EIE;
 
+  USART2->CR1 |= USART_CR1_RXNEIE;
+  USART2->CR3 |= USART_CR3_EIE;
+
+  cpp_init();
   nokia_lcd_init();
   pwr_monitor_init();
 
@@ -118,11 +128,24 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    terminal_run();
-    nokia_lcd_run();
-    HAL_Delay(100);
+    //only start new samples while Sonoff is not busy
+    if(esp_idle())
+      pwr_monitor_run();
 
-    pwr_monitor_run();
+    //Only while ADC is not sampling, do run() with delays
+    if(!pwr_monitor_busy())
+    {
+      terminal_run();
+      nokia_lcd_run();
+      cpp_run();
+      HAL_Delay(1);
+      //Reset every 3.14 hours
+      if(HAL_GetTick() > 11304000)
+      {
+        printf("House keep Reboot...\n");
+        NVIC_SystemReset();
+      }
+    }
 
     /* USER CODE END WHILE */
 
@@ -143,9 +166,10 @@ void SystemClock_Config(void)
 
   /** Initializes the CPU, AHB and APB busses clocks 
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
+  RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
@@ -167,7 +191,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_ADC|RCC_PERIPHCLK_USB;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_RTC|RCC_PERIPHCLK_ADC
+                              |RCC_PERIPHCLK_USB;
+  PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
   PeriphClkInit.AdcClockSelection = RCC_ADCPCLK2_DIV6;
   PeriphClkInit.UsbClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)

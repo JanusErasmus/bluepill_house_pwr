@@ -20,6 +20,7 @@ typedef enum
 } LcdFontSize;
 
 void lcd_str(char *str);
+void lcd_str_sml(char *str);
 
 static int tick = 0;
 static uint8_t  LcdCache [ 512 ];
@@ -85,18 +86,7 @@ void nokia_lcd_init()
   lcd_cmd( 0x0C );  // LCD in normal mode.
 
   memset(LcdCache, 0x00, 504);
-
-//  LcdChr(FONT_1X, 'A');
-//  LcdChr(FONT_2X, 'J');
-//  LcdChr(FONT_2X, 'a');
-//  LcdChr(FONT_2X, 'n');
-//  LcdChr(FONT_2X, 'u');
-//  LcdChr(FONT_2X, 's');
-//  LcdChr(FONT_1X, ' ');
-//  LcdChr(FONT_1X, 'E');
-//  LcdChr(FONT_1X, 'r');
-//  LcdChr(FONT_1X, 'a');
-//  LcdChr(FONT_2X, 'K');
+  UpdateLcd = 1;
 }
 
 
@@ -266,27 +256,42 @@ void nokia_lcd_run()
       UpdateLcd = 0;
       lcd_update();
     }
-
-//    lcd_pixel(x, y, 1);
-//    y++;
-//    if(x >= 84)
-//    {
-//      x = 0;
-//    }
-//
-//    if(y >= 48)
-//    {
-//      x++;
-//      y = 0;
-//    }
   }
 }
 
+static int active_cnt = 0;
+void show_active()
+{
+  char act[2];
+  act[1] = 0;
+  switch(active_cnt++)
+  {
+  case 0:
+    act[0] = '-';
+    break;
+  case 1:
+    act[0] = '\\';
+    break;
+  case 2:
+    act[0] = '|';
+    break;
+  case 3:
+  default:
+    act[0] = '/';
+    active_cnt = 0;
+    break;
+  }
+
+  LcdCacheIdx = 376;
+  lcd_str_sml(act);
+}
 
 static float _vin = 0;
 static float _current = 0;
 void lcd_set_pwr(float vin, float current)
 {
+  show_active();
+
   int changed = 0;
   if((_vin + 1 < vin) || (vin < _vin - 1))
   {
@@ -304,13 +309,12 @@ void lcd_set_pwr(float vin, float current)
 
   char temp[64];
   sprintf(temp, "%03.1f V", _vin);
-  LcdCacheIdx = 84;
+  LcdCacheIdx = 86;
   lcd_str(temp);
   sprintf(temp, "%1.3f A", _current);
-  LcdCacheIdx = 336;
+  LcdCacheIdx = 254;
   lcd_str(temp);
-
   sprintf(temp, "%6.3f kW", (_current * _vin) / 1000.0);
-  LcdCacheIdx = 420;
+  LcdCacheIdx = 450;
   lcd_str_sml(temp);
 }
