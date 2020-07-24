@@ -32,10 +32,11 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "usbd_cdc_if.h"
-#include "Utils/terminal.h"
-#include "nokia_lcd.h"
-#include "pwr_monitor.h"
-#include "wrap_cpp.h"
+//#include "Utils/terminal.h"
+//#include "nokia_lcd.h"
+//#include "pwr_monitor.h"
+//#include "wrap_cpp.h"
+#include "ns_cmdline.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -64,6 +65,12 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+int print_date(int argc, char* argv[])
+{
+  printf("Date:\n");
+
+  return CMDLINE_RETCODE_SUCCESS;
+}
 
 /* USER CODE END 0 */
 
@@ -118,9 +125,16 @@ int main(void)
   USART2->CR1 |= USART_CR1_RXNEIE;
   USART2->CR3 |= USART_CR3_EIE;
 
-  cpp_init();
-  nokia_lcd_init();
-  pwr_monitor_init();
+//  cpp_init();
+//  nokia_lcd_init();
+//  pwr_monitor_init();
+
+  cmd_init(0);
+  cmd_add("date",
+      print_date,
+      "print date",
+      "Simply print the date\n"
+      "Args");
 
   /* USER CODE END 2 */
 
@@ -129,23 +143,23 @@ int main(void)
   while (1)
   {
     //only start new samples while Sonoff is not busy
-    if(esp_idle())
-      pwr_monitor_run();
+//    if(esp_idle())
+//      pwr_monitor_run();
 
     //Only while ADC is not sampling, do run() with delays
-    if(!pwr_monitor_busy())
-    {
-      terminal_run();
-      nokia_lcd_run();
-      cpp_run();
-      HAL_Delay(1);
-      //Reset every 3.14 hours
-      if(HAL_GetTick() > 11304000)
-      {
-        printf("House keep Reboot...\n");
-        NVIC_SystemReset();
-      }
-    }
+//    if(!pwr_monitor_busy())
+//    {
+//      terminal_run();
+//      nokia_lcd_run();
+//      cpp_run();
+//      HAL_Delay(1);
+//      //Reset every 3.14 hours
+//      if(HAL_GetTick() > 11304000)
+//      {
+//        printf("House keep Reboot...\n");
+//        NVIC_SystemReset();
+//      }
+//    }
 
     /* USER CODE END WHILE */
 

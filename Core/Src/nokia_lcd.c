@@ -308,10 +308,10 @@ void lcd_set_pwr(float vin, float current)
     return;
 
   char temp[64];
-  sprintf(temp, "%03.1f V", _vin);
+  sprintf(temp, "%5.1f V", _vin);
   LcdCacheIdx = 86;
   lcd_str(temp);
-  sprintf(temp, "%1.3f A", _current);
+  sprintf(temp, "%5.2f A", _current);
   LcdCacheIdx = 254;
   lcd_str(temp);
   sprintf(temp, "%6.3f kW", (_current * _vin) / 1000.0);
