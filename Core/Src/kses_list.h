@@ -14,14 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef NS_LIST_H_
-#define NS_LIST_H_
+#ifndef KSES_NS_LIST_H_
+#define KSES_NS_LIST_H_
 
 #include "ns_types.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+namespace kses {
 
 /** \file
  * \brief Linked list support library
@@ -252,7 +250,7 @@ typedef struct ns_list_link {
 /** \brief "Poison" value placed in unattached entries' link pointers.
  * \internal What are good values for this? Platform dependent, maybe just NULL
  */
-#define NS_LIST_POISON ((void *) 0xDEADBEEF)
+#define NS_LIST_POISON // ((void *) 0xDEADBEEF)
 
 /** \brief Initialiser for an entry's link member
  *
@@ -603,8 +601,8 @@ NS_LIST_FN void ns_list_init_(ns_list_t *list)
 NS_LIST_FN void ns_list_link_init_(ns_list_link_t *link)
 {
     NS_FUNNY_INTPTR_OK
-    link->next = NS_LIST_POISON;
-    link->prev = NS_LIST_POISON;
+    link->next = 0;//NS_LIST_POISON;
+    link->prev = 0;//NS_LIST_POISON;
     NS_FUNNY_INTPTR_RESTORE
 }
 
@@ -732,7 +730,7 @@ NS_LIST_FN void ns_list_concatenate_(ns_list_t *dst, ns_list_t *src, ns_list_off
 {
     ns_list_link_t *src_first;
 
-    src_first = src->first_entry;
+    src_first = (ns_list_link_t *)src->first_entry;
     if (!src_first) {
         return;
     }
@@ -756,9 +754,7 @@ NS_LIST_FN uint_fast16_t ns_list_count_(const ns_list_t *list, ns_list_offset_t 
 }
 #endif /* defined NS_ALLOW_INLINING || defined NS_LIST_FN */
 
-#ifdef __cplusplus
-}
-#endif
+};
 
-#endif /* NS_LIST_H_ */
+#endif /* KSES_NS_LIST_H_ */
 

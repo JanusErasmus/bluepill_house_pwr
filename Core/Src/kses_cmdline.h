@@ -55,19 +55,16 @@
  * }
  * \endcode
  */
-#ifndef _CMDLINE_H_
-#define _CMDLINE_H_
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#ifndef _KSES_CMDLINE_H_
+#define _KSES_CMDLINE_H_
 
 #include <stdarg.h>
 #include <stdint.h>
 #include <stddef.h>
 #include <stdbool.h>
+#include <functional>
 
-#include "ns_list.h"
+#include "kses_list.h"
 
 #define CMDLINE_RETCODE_COMMAND_BUSY            2   //!< Command Busy
 #define CMDLINE_RETCODE_EXCUTING_CONTINUE       1   //!< Execution continue in background
@@ -77,7 +74,6 @@ extern "C" {
 #define CMDLINE_RETCODE_COMMAND_NOT_IMPLEMENTED -3  //!< Command not implemented
 #define CMDLINE_RETCODE_COMMAND_CB_MISSING      -4  //!< Command callback function missing
 #define CMDLINE_RETCODE_COMMAND_NOT_FOUND       -5  //!< Command not found
-
 
 /**
  * typedef for print functions
@@ -93,14 +89,14 @@ typedef void (cmd_print_t)(const char *, va_list);
  * \endcode
  * \param outf  console printing function (like vprintf)
  */
-void cmd_init(cmd_print_t *outf);
+void kses_cmd_init(cmd_print_t *outf);
 /** Command ready function for __special__ cases.
  * This need to be call if command implementation return CMDLINE_RETCODE_EXECUTING_CONTINUE
  * because there is some background stuff ongoing before command is finally completed.
  * Normally there is some event, which call cmd_ready().
  * \param retcode return code for command
  */
-void cmd_ready(int retcode);
+void kses_cmd_ready(int retcode);
 /** typedef for ready cb function */
 typedef void (cmd_ready_cb_f)(int);
 /**
@@ -108,31 +104,31 @@ typedef void (cmd_ready_cb_f)(int);
  * or cmd_ready is called
  * \param cb    callback function for command ready
  */
-void cmd_set_ready_cb(cmd_ready_cb_f *cb);
+void kses_cmd_set_ready_cb(cmd_ready_cb_f *cb);
 /**
  * execute next command if any
  * \param retcode last command return value
  */
-void cmd_next(int retcode);
+void kses_cmd_next(int retcode);
 /** Free cmd class */
-void cmd_free(void);
+void kses_cmd_free(void);
 /** Reset cmdline to default values
  *  detach external commands, delete all variables and aliases
  */
-void cmd_reset(void);
+void kses_cmd_reset(void);
 /** Configure command history size (default 32)
  *  \param max  maximum history size
  *  max > 0 -> configure new value
  *  max = 0 -> just return current value
  *  \return current history max-size
  */
-uint8_t cmd_history_size(uint8_t max);
+uint8_t kses_cmd_history_size(uint8_t max);
 /** command line print function
  *  This function should be used when user want to print something to the console
  *  \param fmt   console print function (like printf)
  */
 #if defined(__GNUC__) || defined(__CC_ARM)
-void cmd_printf(const char *fmt, ...)  __attribute__((__format__(__printf__, 1, 2)));
+void kses_cmd_printf(const char *fmt, ...)  __attribute__((__format__(__printf__, 1, 2)));
 #else
 void cmd_printf(const char *fmt, ...);
 #endif
@@ -142,32 +138,32 @@ void cmd_printf(const char *fmt, ...);
  *  \param ap   list of parameters needed by format string. This must correspond properly with the conversion specifier.
  */
 #if defined(__GNUC__) || defined(__CC_ARM)
-void cmd_vprintf(const char *fmt, va_list ap)  __attribute__((__format__(__printf__, 1, 0)));
+void kses_cmd_vprintf(const char *fmt, va_list ap)  __attribute__((__format__(__printf__, 1, 0)));
 #else
 void cmd_vprintf(const char *fmt, va_list ap);
 #endif
 /** Reconfigure default cmdline out function (cmd_printf)
  *  \param outf  select console print function
  */
-void cmd_out_func(cmd_print_t *outf);
+void kses_cmd_out_func(cmd_print_t *outf);
 /** Configure function, which will be called when Ctrl+A is pressed
  * \param sohf control function which called every time when user input control keys
  */
-void cmd_ctrl_func(void (*sohf)(uint8_t c));
+void kses_cmd_ctrl_func(void (*sohf)(uint8_t c));
 /**
  * Configure mutex wait function
  * By default, cmd_printf calls may not be thread safe, depending on the implementation of the used output.
  * This can be used to set a callback function that will be called before each cmd_printf call.
  * The specific implementation is up to the application developer, but simple mutex locking is assumed.
  */
-void cmd_mutex_wait_func(void (*mutex_wait_f)(void));
+void kses_cmd_mutex_wait_func(void (*mutex_wait_f)(void));
 /**
  * Configure mutex wait function
  * By default, cmd_printf calls may not be thread safe, depending on the implementation of the used output.
  * This can be used to set a callback function that will be called after each cmd_printf call.
  * The specific implementation is up to the application developer, but simple mutex locking is assumed.
  */
-void cmd_mutex_release_func(void (*mutex_release_f)(void));
+void kses_cmd_mutex_release_func(void (*mutex_release_f)(void));
 /**
  * Retrieve output mutex lock
  * This can be used to retrieve the output mutex when multiple cmd_printf/cmd_vprintf calls must be
@@ -186,16 +182,16 @@ void cmd_mutex_release_func(void (*mutex_release_f)(void));
  * Exact behaviour depends on the implementation of the configured mutex,
  * but counting mutexes are required.
  */
-void cmd_mutex_lock(void);
+void kses_cmd_mutex_lock(void);
 /**
  * Release output mutex lock
  * This can be used to release the output mutex once it has been retrieved with cmd_mutex_lock()
  * Exact behaviour depends on the implementation of the configured mutex,
  * but counting mutexes are required.
  */
-void cmd_mutex_unlock(void);
+void kses_cmd_mutex_unlock(void);
 /** Refresh output */
-void cmd_output(void);
+void kses_cmd_output(void);
 /** default cmd response function, use stdout
  *  \param fmt  The format string is a character string, beginning and ending in its initial shift state, if any. The format string is composed of zero or more directives.
  *  \param ap   list of parameters needed by format string. This must correspond properly with the conversion specifier.
@@ -231,19 +227,19 @@ void cmd_input_passthrough_func(input_passthrough_func_t passthrough_fnc);
  * \param argc argc is the count of arguments given in argv pointer list. value begins from 1 and this means that the 0 item in list argv is a string to name of command.
  * \param argv argv is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
  */
-typedef int (cmd_run_cb)(int argc, char *argv[]);
+typedef std::function<int (int argc, char *argv[])> cmd_run_cb;
 /** Add command to intepreter
  * \param name      command string
  * \param callback  This function is called when command line start executing
  * \param info      Command short description which is visible in help command, or null if not in use
  * \param man       Help page for this command. This is shown when executing command with invalid parameters or command with --help parameter. Can be null if not in use.
  */
-void cmd_add(const char *name, cmd_run_cb *callback, const char *info, const char *man);
+void kses_cmd_add(const char *name, cmd_run_cb callback, const char *info, const char *man);
 
 /** delete command from intepreter
  *  \param name command to be delete
  */
-void cmd_delete(const char *name);
+void kses_cmd_delete(const char *name);
 /** Command executer.
  * Command executer, which split&push command(s) to the buffer and
  * start executing commands in cmd tasklet.
@@ -252,7 +248,7 @@ void cmd_delete(const char *name);
  * executor will wait for cmd_ready() before continue to next command.
  * \param str  command string, e.g. "help"
  */
-void cmd_exe(char *str);
+void kses_cmd_exe(char *str);
 /** Add alias to interpreter.
  * Aliases are replaced with values before executing a command. All aliases must be started from beginning of line.
  * null or empty value deletes alias.
@@ -263,7 +259,7 @@ void cmd_exe(char *str);
  * \param alias     alias name
  * \param value     value for alias. Values can be any visible ASCII -characters.
  */
-void cmd_alias_add(const char *alias, const char *value);
+void kses_cmd_alias_add(const char *alias, const char *value);
 /** Add Variable to interpreter.
  * Variables are replaced with values before executing a command.
  * To use variables from cli, use dollar ($) -character so that interpreter knows user want to use variable in that place.
@@ -275,7 +271,7 @@ void cmd_alias_add(const char *alias, const char *value);
  * \param variable  Variable name, which will be replaced in interpreter.
  * \param value     Value for variable. Values can contains white spaces and '"' or '"' characters.
  */
-void cmd_variable_add(char *variable, char *value);
+void kses_cmd_variable_add(const char *variable, char *value);
 /**
  * Add integer variable to interpreter.
  * Variables are replaced with values before executing a command.
@@ -287,14 +283,14 @@ void cmd_variable_add(char *variable, char *value);
  * \param value     Value for variable
 
  */
-void cmd_variable_add_int(char *variable, int value);
+void kses_cmd_variable_add_int(const char *variable, int value);
 /**
  * Request screen size from host
  * Response are stored to variables:
  * COLUMNS and LINES - as integer values.
  * Note: Require terminal that handle request codes, like screen.
  */
-void cmd_request_screen_size(void);
+void kses_cmd_request_screen_size(void);
 
 
 /** find command parameter index by key.
@@ -314,7 +310,7 @@ void cmd_request_screen_size(void);
  * \param key   option key, which index you want to find out.
  * \return index where parameter was or -1 when not found
  */
-int cmd_parameter_index(int argc, char *argv[], const char *key);
+int kses_cmd_parameter_index(int argc, char *argv[], const char *key);
 /** check if command option is present.
  * e.g. cmd: "mycmd -c"
  * \code
@@ -325,7 +321,7 @@ int cmd_parameter_index(int argc, char *argv[], const char *key);
  * \param key   option key to be find
  * \return true if option found otherwise false
  */
-bool cmd_has_option(int argc, char *argv[], const char *key);
+bool kses_cmd_has_option(int argc, char *argv[], const char *key);
 /** find command parameter by key.
  * if exists, return true, otherwise false.
  * e.g. cmd: "mycmd enable 1"
@@ -343,7 +339,7 @@ bool cmd_has_option(int argc, char *argv[], const char *key);
  * \param value parameter value to be fetch, if key not found value are untouched. "1" and "on" and "true" and "enable" and "allow" are True -value, all others false.
  * \return true if parameter key and value found otherwise false
  */
-bool cmd_parameter_bool(int argc, char *argv[], const char *key, bool *value);
+bool kses_cmd_parameter_bool(int argc, char *argv[], const char *key, bool *value);
 /** find command parameter by key and return value (next parameter).
  * if exists, return parameter pointer, otherwise null.
  * e.g. cmd: "mycmd mykey myvalue"
@@ -361,7 +357,7 @@ bool cmd_parameter_bool(int argc, char *argv[], const char *key, bool *value);
  * \param value pointer to pointer, which will point to cli input data when key and value found. if key or value not found this parameter are untouched.
  * \return true if parameter key and value found otherwise false
  */
-bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value);
+bool kses_cmd_parameter_val(int argc, char *argv[], const char *key, char **value);
 /** find command parameter by key and return value (next parameter) in integer. Only whitespaces are allowed in addition to the float to be read.
  * e.g. cmd: "mycmd mykey myvalue"
  * \code
@@ -374,7 +370,7 @@ bool cmd_parameter_val(int argc, char *argv[], const char *key, char **value);
  * \param value A pointer to a variable where to write the converted number. If value cannot be converted, it is not touched.
  * \return true if parameter key and an integer is found, otherwise return false
  */
-bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
+bool kses_cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
 /** find command parameter by key and return value (next parameter) in float. Only whitespaces are allowed in addition to the float to be read.
  * e.g. cmd: "mycmd mykey myvalue"
  * \code
@@ -387,7 +383,7 @@ bool cmd_parameter_int(int argc, char *argv[], const char *key, int32_t *value);
  * \param value A pointer to a variable where to write the converted number. If value cannot be converted, it is not touched.
  * \return true if parameter key and a float found, otherwise return false
  */
-bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value);
+bool kses_cmd_parameter_float(int argc, char *argv[], const char *key, float *value);
 /** Get last command line parameter as string.
  * e.g.
  *     cmd: "mycmd hello world"
@@ -401,7 +397,7 @@ bool cmd_parameter_float(int argc, char *argv[], const char *key, float *value);
  * \param argv  is list of arguments. List size is given in argc parameter. Value in argv[0] is string to name of command.
  * \return pointer to last parameter or NULL when there is no any parameters.
  */
-char *cmd_parameter_last(int argc, char *argv[]);
+char *kses_cmd_parameter_last(int argc, char *argv[]);
 
 /** find command parameter by key and return value (next parameter) in int64.
  * e.g. cmd: "mycmd mykey myvalue"
@@ -421,9 +417,6 @@ char *cmd_parameter_last(int argc, char *argv[]);
  * \param value parameter value to be fetch, if key not found value are untouched.
  * \return true if parameter key and value found otherwise false
  */
-bool cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *value);
+bool kses_cmd_parameter_timestamp(int argc, char *argv[], const char *key, int64_t *value);
 
-#ifdef __cplusplus
-}
-#endif
-#endif /*_CMDLINE_H_*/
+#endif /*_KSES_CMDLINE_H_*/
