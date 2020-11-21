@@ -130,6 +130,11 @@ extern "C" {
    return pipe.isIdle();
  }
 
+ void esp_reset()
+ {
+     pipe.resetSonoff();
+ }
+
  void sonoffDebug(uint8_t argc, char **argv)
  {
    printf("Reporting via Sonoff: %s\n", sonoff_report()?"OK":"KO");

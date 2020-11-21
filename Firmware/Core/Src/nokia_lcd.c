@@ -74,9 +74,9 @@ void nokia_lcd_init()
   tick = HAL_GetTick() + DISPLAY_REFRESH;
 
   HAL_GPIO_WritePin(SPI1_RESET_GPIO_Port, SPI1_RESET_Pin, GPIO_PIN_RESET);
-  HAL_Delay(500);
+  HAL_Delay(1000);
   HAL_GPIO_WritePin(SPI1_RESET_GPIO_Port, SPI1_RESET_Pin, GPIO_PIN_SET);
-  HAL_Delay(100);
+  HAL_Delay(500);
 
   lcd_cmd( 0x21 );  // LCD Extended Commands.
   lcd_cmd( 0xC8 );  // Set LCD Vop (Contrast).
@@ -86,6 +86,7 @@ void nokia_lcd_init()
   lcd_cmd( 0x0C );  // LCD in normal mode.
 
   memset(LcdCache, 0x00, 504);
+  lcd_str("Powering");
   UpdateLcd = 1;
 }
 
@@ -189,6 +190,7 @@ void lcd_chr ( LcdFontSize size, uint8_t ch )
 
 void lcd_str(char *str)
 {
+//    printf("LCD: %s\n", str);
   while(*str)
   {
     lcd_chr(FONT_2X, *str++);
@@ -197,6 +199,7 @@ void lcd_str(char *str)
 
 void lcd_str_sml(char *str)
 {
+//    printf("LCDsml: %s\n", str);
   while(*str)
   {
     lcd_chr(FONT_1X, *str++);

@@ -16,6 +16,7 @@
  void cpp_run();
  void esp_handle_byte(uint8_t byte);
  int esp_idle();
+ void esp_reset();
 
 #ifdef __cplusplus
  }
