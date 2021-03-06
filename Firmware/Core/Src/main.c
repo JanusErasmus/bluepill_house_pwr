@@ -93,13 +93,13 @@ int main(void)
   /* USER CODE END SysInit */
 
   /* Initialize all configured peripherals */
+  MX_GPIO_Init();
   MX_USB_DEVICE_Init();
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
   MX_TIM1_Init();
   MX_RTC_Init();
-  MX_GPIO_Init();
   MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 
@@ -119,6 +119,7 @@ int main(void)
 
   cpp_init();
   nokia_lcd_init();
+
   pwr_monitor_init();
 
   /* USER CODE END 2 */
@@ -214,6 +215,11 @@ void SystemClock_Config(void)
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
 
+
+uint8_t stdio_tx_buffer[2048];
+int stdio_tx_head = 0;
+int stdio_tx_tail = 0;
+
 /**
  * @brief Retargets the C library printf function to the USART.
  * @param None
@@ -221,21 +227,38 @@ void SystemClock_Config(void)
  */
 PUTCHAR_PROTOTYPE
 {
-  if(ch == '\n')
-  {
-    uint8_t cr = '\r';
-    HAL_UART_Transmit(&huart1, &cr, 1, 0xFFFF);
-  }
+    // =================== Polling TXE =====================
+//  if(ch == '\n')
+//  {
+//    uint8_t cr = '\r';
+//    HAL_UART_Transmit(&huart1, &cr, 1, 0xFFFF);
+//  }
+//
+//  if(ch == '\r')
+//  {
+//    uint8_t cr = '\n';
+//    HAL_UART_Transmit(&huart1, &cr, 1, 0xFFFF);
+//  }
+// HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
 
-  if(ch == '\r')
-  {
-    uint8_t cr = '\n';
-    HAL_UART_Transmit(&huart1, &cr, 1, 0xFFFF);
-  }
+// =================== ISR driven =====================
+    if(ch == '\n')
+    {
+        stdio_tx_buffer[stdio_tx_head] = '\r';
+        stdio_tx_head = (stdio_tx_head + 1) % 2048;
 
+    }
 
- HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
+    if(ch == '\r')
+    {
+        stdio_tx_buffer[stdio_tx_head] = '\n';
+        stdio_tx_head = (stdio_tx_head + 1) % 2048;
+    }
+    stdio_tx_buffer[stdio_tx_head] = ch;
+    stdio_tx_head = (stdio_tx_head + 1) % 2048;
 
+    //Start TX ISR
+    USART1->CR1 |= USART_CR1_TXEIE;
 return ch;
 }
 /* USER CODE END 4 */

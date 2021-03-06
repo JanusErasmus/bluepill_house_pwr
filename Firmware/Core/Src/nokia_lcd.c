@@ -24,7 +24,7 @@ void lcd_str_sml(char *str);
 
 static int tick = 0;
 static uint8_t  LcdCache [ 512 ];
-static int LcdCacheIdx = 0;
+static int LcdCacheIdx = 90;
 static int UpdateLcd = 0;
 static int LoWaterMark = 0;
 static int HiWaterMark = 503;
@@ -33,16 +33,20 @@ static void lcd_cmd(uint8_t cmd)
 {
   HAL_GPIO_WritePin(SPI1_DC_GPIO_Port, SPI1_DC_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(SPI1_CE_GPIO_Port, SPI1_CE_Pin, GPIO_PIN_RESET);
+  //HAL_Delay(1);
   HAL_SPI_Transmit(&hspi1, &cmd, 1, 1000);
   HAL_GPIO_WritePin(SPI1_DC_GPIO_Port, SPI1_DC_Pin, GPIO_PIN_SET);
   HAL_GPIO_WritePin(SPI1_CE_GPIO_Port, SPI1_CE_Pin, GPIO_PIN_SET);
+  //HAL_Delay(2);
 }
 
 static void lcd_data(uint8_t *data, int len)
 {
   HAL_GPIO_WritePin(SPI1_CE_GPIO_Port, SPI1_CE_Pin, GPIO_PIN_RESET);
+  //HAL_Delay(1);
   HAL_SPI_Transmit(&hspi1, data, len, 1000);
   HAL_GPIO_WritePin(SPI1_CE_GPIO_Port, SPI1_CE_Pin, GPIO_PIN_SET);
+  //HAL_Delay(2);
 }
 
 void lcd_update()
@@ -60,6 +64,7 @@ void lcd_update()
     lcd_cmd( 0x80 | (LoWaterMark % 84) );
     lcd_cmd( 0x40 | (LoWaterMark / 84) );
 
+    //printf("U\n");
     //  Serialize the video buffer.
     int len = (HiWaterMark - LoWaterMark) + 1;
     lcd_data( &LcdCache[LoWaterMark], len);
@@ -76,7 +81,7 @@ void nokia_lcd_init()
   HAL_GPIO_WritePin(SPI1_RESET_GPIO_Port, SPI1_RESET_Pin, GPIO_PIN_RESET);
   HAL_Delay(1000);
   HAL_GPIO_WritePin(SPI1_RESET_GPIO_Port, SPI1_RESET_Pin, GPIO_PIN_SET);
-  HAL_Delay(500);
+  HAL_Delay(200);
 
   lcd_cmd( 0x21 );  // LCD Extended Commands.
   lcd_cmd( 0xC8 );  // Set LCD Vop (Contrast).
@@ -84,10 +89,8 @@ void nokia_lcd_init()
   lcd_cmd( 0x13 );  // LCD bias mode 1:48.
   lcd_cmd( 0x20 );  // LCD Standard Commands, Horizontal addressing mode.
   lcd_cmd( 0x0C );  // LCD in normal mode.
-
   memset(LcdCache, 0x00, 504);
-  lcd_str("Powering");
-  UpdateLcd = 1;
+  lcd_str("Start");
 }
 
 
@@ -190,7 +193,7 @@ void lcd_chr ( LcdFontSize size, uint8_t ch )
 
 void lcd_str(char *str)
 {
-//    printf("LCD: %s\n", str);
+  //  printf("LCD: %s\n", str);
   while(*str)
   {
     lcd_chr(FONT_2X, *str++);
@@ -263,7 +266,7 @@ void nokia_lcd_run()
 }
 
 static int active_cnt = 0;
-void show_active()
+void lcd_show_active()
 {
   char act[2];
   act[1] = 0;
@@ -293,8 +296,6 @@ static float _vin = 0;
 static float _current = 0;
 void lcd_set_pwr(float vin, float current)
 {
-  show_active();
-
   int changed = 0;
   if((_vin + 1 < vin) || (vin < _vin - 1))
   {

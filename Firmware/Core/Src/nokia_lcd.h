@@ -14,6 +14,9 @@
 void nokia_lcd_init();
 void nokia_lcd_run();
 
+
+void lcd_show_active();
+
 void lcd_str(char *str);
 void lcd_set_pwr(float vin, float current);
 

@@ -7,6 +7,7 @@
 #include <stdio.h>
 #include <math.h>
 
+#include "nokia_lcd.h"
 #include "adc.h"
 #include "tim.h"
 
@@ -46,6 +47,8 @@ void pwr_monitor_run()
   {
     tick = HAL_GetTick() + PWR_SAMPLE_RATE;
     HAL_GPIO_TogglePin(LED_GPIO_Port, LED_Pin);
+
+    lcd_show_active();
 
     if(adc_start <= 0)
     {

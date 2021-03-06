@@ -54,7 +54,9 @@
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+extern uint8_t stdio_tx_buffer[2048];
+extern int stdio_tx_head;
+extern int stdio_tx_tail;
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
@@ -236,8 +238,26 @@ void TIM1_CC_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
+    int handled = 0;
+    if(USART1->SR & USART_SR_RXNE){
+	handled = 1;
 	terminal_handleByte(huart1.Instance->DR);
-	return;
+    }
+
+    if(USART1->SR & USART_SR_TXE){
+        handled = 1;
+        if(stdio_tx_head != stdio_tx_tail)
+        {
+            huart1.Instance->DR = stdio_tx_buffer[stdio_tx_tail];
+            stdio_tx_tail = (stdio_tx_tail + 1) % 2048;
+        }
+        else
+        {
+            USART1->CR1 &= ~(USART_CR1_TXEIE);
+        }
+    }
+    if(handled)
+        return;
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
