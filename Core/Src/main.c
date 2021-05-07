@@ -17,7 +17,6 @@
   ******************************************************************************
   */
 /* USER CODE END Header */
-
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "adc.h"
@@ -36,7 +35,7 @@
 //#include "nokia_lcd.h"
 //#include "pwr_monitor.h"
 //#include "wrap_cpp.h"
-#include "ns_cmdline.h"
+//#include "kses_cmdline.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -65,12 +64,12 @@ void SystemClock_Config(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-int print_date(int argc, char* argv[])
-{
-  printf("Date:\n");
-
-  return CMDLINE_RETCODE_SUCCESS;
-}
+//int print_date(int argc, char* argv[])
+//{
+//  printf("Date:\n");
+//
+//  return CMDLINE_RETCODE_SUCCESS;
+//}
 
 /* USER CODE END 0 */
 
@@ -102,7 +101,7 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-//  MX_USB_DEVICE_Init();
+  MX_USB_DEVICE_Init();
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
@@ -129,12 +128,12 @@ int main(void)
 //  nokia_lcd_init();
 //  pwr_monitor_init();
 
-  cmd_init(0);
-  cmd_add("date",
-      print_date,
-      "print date",
-      "Simply print the date\n"
-      "Args");
+//  cmd_init(0);
+//  cmd_add("date",
+//      print_date,
+//      "print date",
+//      "Simply print the date\n"
+//      "Args");
 
   /* USER CODE END 2 */
 
@@ -178,7 +177,8 @@ void SystemClock_Config(void)
   RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
   RCC_PeriphCLKInitTypeDef PeriphClkInit = {0};
 
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
   */
   RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE|RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
@@ -192,7 +192,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  /** Initializes the CPU, AHB and APB busses clocks 
+  /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
@@ -274,7 +274,7 @@ void Error_Handler(void)
   * @retval None
   */
 void assert_failed(uint8_t *file, uint32_t line)
-{ 
+{
   /* USER CODE BEGIN 6 */
   /* User can add his own implementation to report the file name and line number,
      tex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
