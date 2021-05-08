@@ -14,11 +14,10 @@
 void nokia_lcd_init();
 void nokia_lcd_run();
 
-
-void lcd_show_active();
-
-void lcd_str(char *str);
+void lcd_str_sml(char *str);
 void lcd_set_pwr(float vin, float current);
+void lcd_update_pwr(float vin, float current);
+void lcd_refresh();
 
 
 #ifdef __cplusplus

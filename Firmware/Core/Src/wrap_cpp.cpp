@@ -95,7 +95,7 @@ extern "C" {
      float vin, current;
      if(pwr_monitor_get(&vin, &current))
      {
-       lcd_set_pwr(vin, current);
+       lcd_update_pwr(vin, current);
 
        int changed = 0;
        if((prev_vin + 2 < vin) || (vin < prev_vin - 2))
@@ -128,11 +128,6 @@ extern "C" {
  int esp_idle()
  {
    return pipe.isIdle();
- }
-
- void esp_reset()
- {
-     pipe.resetSonoff();
  }
 
  void sonoffDebug(uint8_t argc, char **argv)

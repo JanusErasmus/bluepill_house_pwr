@@ -19,6 +19,7 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "cmsis_os.h"
 #include "adc.h"
 #include "rtc.h"
 #include "spi.h"
@@ -31,10 +32,6 @@
 /* USER CODE BEGIN Includes */
 #include <stdio.h>
 #include "usbd_cdc_if.h"
-#include "Utils/terminal.h"
-#include "nokia_lcd.h"
-#include "pwr_monitor.h"
-#include "wrap_cpp.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -58,6 +55,7 @@
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
+void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
 /* USER CODE END PFP */
 
@@ -94,7 +92,6 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
-  MX_USB_DEVICE_Init();
   MX_ADC1_Init();
   MX_USART1_UART_Init();
   MX_USART2_UART_Init();
@@ -109,45 +106,24 @@ int main(void)
   printf("APB1    : %lu Hz\n", HAL_RCC_GetPCLK1Freq());
   printf("APB2    : %lu Hz\n", HAL_RCC_GetPCLK2Freq());
   setbuf(stdout, NULL);
-  terminal_init("pwr$ ");
 
   USART1->CR1 |= USART_CR1_RXNEIE;
   USART1->CR3 |= USART_CR3_EIE;
 
   USART2->CR1 |= USART_CR1_RXNEIE;
   USART2->CR3 |= USART_CR3_EIE;
-
-  cpp_init();
-  nokia_lcd_init();
-
-  pwr_monitor_init();
-
   /* USER CODE END 2 */
 
+  /* Call init function for freertos objects (in freertos.c) */
+  MX_FREERTOS_Init();
+  /* Start scheduler */
+  osKernelStart();
+
+  /* We should never get here as control is now taken by the scheduler */
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    //only start new samples while Sonoff is not busy
-    if(esp_idle())
-      pwr_monitor_run();
-
-    //Only while ADC is not sampling, do run() with delays
-    if(!pwr_monitor_busy())
-    {
-      terminal_run();
-      nokia_lcd_run();
-      cpp_run();
-      HAL_Delay(1);
-      //Reset every 3.14 hours
-      if(HAL_GetTick() > 11304000)
-      {
-          esp_reset();
-        printf("House keep Reboot...\n");
-        NVIC_SystemReset();
-      }
-    }
-
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -215,11 +191,6 @@ void SystemClock_Config(void)
 #define PUTCHAR_PROTOTYPE int fputc(int ch, FILE *f)
 #endif /* __GNUC__ */
 
-
-uint8_t stdio_tx_buffer[2048];
-int stdio_tx_head = 0;
-int stdio_tx_tail = 0;
-
 /**
  * @brief Retargets the C library printf function to the USART.
  * @param None
@@ -227,41 +198,45 @@ int stdio_tx_tail = 0;
  */
 PUTCHAR_PROTOTYPE
 {
-    // =================== Polling TXE =====================
-//  if(ch == '\n')
-//  {
-//    uint8_t cr = '\r';
-//    HAL_UART_Transmit(&huart1, &cr, 1, 0xFFFF);
-//  }
-//
-//  if(ch == '\r')
-//  {
-//    uint8_t cr = '\n';
-//    HAL_UART_Transmit(&huart1, &cr, 1, 0xFFFF);
-//  }
-// HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
+  if(ch == '\n')
+  {
+    uint8_t cr = '\r';
+    HAL_UART_Transmit(&huart1, &cr, 1, 0xFFFF);
+  }
 
-// =================== ISR driven =====================
-    if(ch == '\n')
-    {
-        stdio_tx_buffer[stdio_tx_head] = '\r';
-        stdio_tx_head = (stdio_tx_head + 1) % 2048;
+  if(ch == '\r')
+  {
+    uint8_t cr = '\n';
+    HAL_UART_Transmit(&huart1, &cr, 1, 0xFFFF);
+  }
 
-    }
 
-    if(ch == '\r')
-    {
-        stdio_tx_buffer[stdio_tx_head] = '\n';
-        stdio_tx_head = (stdio_tx_head + 1) % 2048;
-    }
-    stdio_tx_buffer[stdio_tx_head] = ch;
-    stdio_tx_head = (stdio_tx_head + 1) % 2048;
+ HAL_UART_Transmit(&huart1, (uint8_t *)&ch, 1, 0xFFFF);
 
-    //Start TX ISR
-    USART1->CR1 |= USART_CR1_TXEIE;
 return ch;
 }
 /* USER CODE END 4 */
+
+ /**
+  * @brief  Period elapsed callback in non blocking mode
+  * @note   This function is called  when TIM4 interrupt took place, inside
+  * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
+  * a global variable "uwTick" used as application time base.
+  * @param  htim : TIM handle
+  * @retval None
+  */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  /* USER CODE BEGIN Callback 0 */
+
+  /* USER CODE END Callback 0 */
+  if (htim->Instance == TIM4) {
+    HAL_IncTick();
+  }
+  /* USER CODE BEGIN Callback 1 */
+
+  /* USER CODE END Callback 1 */
+}
 
 /**
   * @brief  This function is executed in case of error occurrence.

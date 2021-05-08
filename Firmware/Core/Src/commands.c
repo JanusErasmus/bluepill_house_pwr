@@ -10,6 +10,7 @@
 #include "Utils/cli.h"
 #include "rtc.h"
 #include "pwr_monitor.h"
+#include "nokia_lcd.h"
 
 void adcDebug(uint8_t argc, char **argv)
 {
@@ -83,6 +84,21 @@ void rtc_debug(uint8_t argc, char **argv);
 const sTermEntry_t rtcEntry =
 { "date", "RTC date", rtc_debug };
 
+void lcd_debug(uint8_t argc, char **argv)
+{
+	nokia_lcd_init();
+}
+const sTermEntry_t lcdEntry =
+{ "lcd", "Refresh LCD", lcd_debug };
+
+
+void pwr_debug(uint8_t argc, char **argv)
+{
+  lcd_set_pwr(230.5, 22.8);
+}
+const sTermEntry_t pwrEntry =
+{ "pwr", "Set Power", pwr_debug };
+
 const sTermEntry_t *cli_entries[] =
 {
       &hEntry,
@@ -92,5 +108,7 @@ const sTermEntry_t *cli_entries[] =
       &adcEntry,
       &sonoffEntry,
       &rtcEntry,
+      &lcdEntry,
+      &pwrEntry,
 	  0
 };
