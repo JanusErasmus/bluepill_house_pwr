@@ -212,8 +212,12 @@ void TIM4_IRQHandler(void)
 void USART1_IRQHandler(void)
 {
   /* USER CODE BEGIN USART1_IRQn 0 */
-	terminal_handleByte(huart1.Instance->DR);
-	return;
+
+  if(USART1->SR & USART_SR_RXNE)
+  {
+    terminal_handleByte(huart1.Instance->DR);
+    return;
+  }
   /* USER CODE END USART1_IRQn 0 */
   HAL_UART_IRQHandler(&huart1);
   /* USER CODE BEGIN USART1_IRQn 1 */
@@ -227,8 +231,11 @@ void USART1_IRQHandler(void)
 void USART2_IRQHandler(void)
 {
   /* USER CODE BEGIN USART2_IRQn 0 */
-  esp_handle_byte(huart2.Instance->DR);
-  return;
+  if(USART2->SR & USART_SR_RXNE)
+  {
+    esp_handle_byte(huart2.Instance->DR);
+    return;
+  }
   /* USER CODE END USART2_IRQn 0 */
   HAL_UART_IRQHandler(&huart2);
   /* USER CODE BEGIN USART2_IRQn 1 */

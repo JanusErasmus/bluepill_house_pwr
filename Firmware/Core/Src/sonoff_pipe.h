@@ -15,27 +15,32 @@ class SonoffPipe
   {
     UNKNOWN,
     IDLE,
-    CHECK_STATE,
-    WAIT_KO,
-    WAIT_OK,
+    CHECK_OK,
     EXIT_PY,
     WAIT_TERMINAL,
     PUBLISH
   }mState;
   uint8_t mBuffer[128];
   uint8_t line[128];
+  bool mLineReady;
   int idx = 0;
   int mHead;
   int mTail;
   char mPublishMessage[128];
   int (*transmitCB)(uint8_t *buffer, int len);
   uint32_t mKeepAliveTick;
-  eState mSonoffReply;
-  int  mPromptCount;
-
+  bool  mTerminalReady;
+  int mOpStep;
+  uint32_t mOptimeout;
+  int mNotOKcount;
+  int mPublishError;
   void serviceBuffer();
   void handleLine(const char* line);
   void (*mReceiveCB)(const char* line);
+
+  int doIsSonoffOK();
+  int doResetSonoff();
+  int doPublish();
 
 public:
   SonoffPipe();
@@ -45,6 +50,7 @@ public:
   void run();
   bool isIdle(){ return (mState == IDLE); }
   void resetSonoff();
+  void checkOK();
 
   bool publish(const char *message);
   void setReceivedCB(void (*receive_cb)(const char* line));

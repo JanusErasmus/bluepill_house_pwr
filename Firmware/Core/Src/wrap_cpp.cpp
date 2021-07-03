@@ -5,6 +5,8 @@
  *      Author: jerasmus
  */
 #include <stdio.h>
+#include <string.h>
+
 #include "usart.h"
 #include "sonoff_pipe.h"
 #include "pwr_monitor.h"
@@ -72,7 +74,9 @@ extern "C" {
       if(HAL_UART_Transmit(&huart2, &buf[k], 1, 300)  != HAL_OK)
         return -1;
 
-      HAL_Delay(100);
+//      printf("-> %c\n", buf[k]);
+
+      HAL_Delay(80);
     }
 
     return len;
@@ -132,7 +136,23 @@ extern "C" {
 
  void sonoffDebug(uint8_t argc, char **argv)
  {
-   printf("Reporting via Sonoff: %s\n", sonoff_report()?"OK":"KO");
+   if(argc > 1)
+   {
+     if(!strcmp(argv[1], "tx"))
+     {
+       printf("Reporting via Sonoff: %s\n", sonoff_report()?"OK":"KO");
+     }
+
+     if(!strcmp(argv[1], "exit"))
+     {
+       pipe.resetSonoff();
+     }
+
+     if(!strcmp(argv[1], "ok"))
+     {
+       pipe.checkOK();
+     }
+   }
  }
 
 }
