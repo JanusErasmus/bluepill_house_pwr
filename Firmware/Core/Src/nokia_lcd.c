@@ -11,7 +11,7 @@
 #include "main.h"
 #include "spi.h"
 #include "rtc.h"
-
+#include "Utils/utils.h"
 #define DISPLAY_REFRESH 100
 extern  uint8_t FontLookup[][5];
 
@@ -302,12 +302,16 @@ void show_active()
   LcdCacheIdx = 340;
   lcd_str_sml(act);
 
-  RTC_TimeTypeDef sTime;
-  RTC_DateTypeDef sDate;
-  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
-  HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+//  RTC_TimeTypeDef sTime;
+//  RTC_DateTypeDef sDate;
+//  HAL_RTC_GetTime(&hrtc, &sTime, RTC_FORMAT_BIN);
+//  HAL_RTC_GetDate(&hrtc, &sDate, RTC_FORMAT_BIN);
+//  char temp[32];
+//  sprintf(temp, "%02d:%02d:%02d", sTime.Hours, sTime.Minutes, sTime.Seconds);
+
+
   char temp[32];
-  sprintf(temp, "%02d:%02d:%02d", sTime.Hours, sTime.Minutes, sTime.Seconds);
+  timeToString(HAL_GetTick() / 1000, temp);
 
   LcdCacheIdx = 365;
   lcd_str_sml(temp);

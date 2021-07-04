@@ -1,6 +1,39 @@
 #include <stdint.h>
 #include <stdio.h>
 
+
+void timeToString(uint32_t now, char * string)
+{
+  if(now < 60)
+  {
+    sprintf(string, "%ds", (int)now);
+  }
+  else
+  {
+    int min = now / 60;
+    now %= 60;
+    if(min < 60)
+    {
+      sprintf(string, "%dm %ds", min, (int)now);
+    }
+    else
+    {
+      int hour = min / 60;
+      min %= 60;
+      if(hour < 24)
+      {
+        sprintf(string, "%dh %dm %ds", hour, min, (int)now);
+      }
+      else
+      {
+        int day = hour / 24;
+        hour %= 24;
+        sprintf(string, "%dd %dh %dm %ds", day, hour, min ,(int)now);
+      }
+    }
+  }
+}
+
 void
 diag_vdump_buf_with_offset(
       uint8_t    *p,

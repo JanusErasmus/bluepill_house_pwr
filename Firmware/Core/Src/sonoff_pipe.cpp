@@ -102,19 +102,24 @@ void SonoffPipe::serviceBuffer()
 
 void SonoffPipe::resetSonoff()
 {
-  printf("Reset Sonoff\n");
+  if((mState == UNKNOWN) || (mState == IDLE))
+  {
+    printf("Reseting Sonoff\n");
 
-  mOpStep = 0;
-  mState = EXIT_PY;
-
+    mOpStep = 0;
+    mState = EXIT_PY;
+  }
 }
 
 void SonoffPipe::checkOK()
 {
-  printf("Is Sonoff OK\n");
+  if((mState == UNKNOWN) || (mState == IDLE))
+  {
+    printf("Check Sonoff OK\n");
 
-  mOpStep = 0;
-  mState = CHECK_OK;
+    mOpStep = 0;
+    mState = CHECK_OK;
+  }
 }
 
 int SonoffPipe::doResetSonoff()

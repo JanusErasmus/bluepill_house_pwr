@@ -8,6 +8,7 @@
 #include <stdlib.h>
 
 #include "Utils/cli.h"
+#include "Utils/utils.h"
 #include "rtc.h"
 #include "pwr_monitor.h"
 #include "nokia_lcd.h"
@@ -79,6 +80,10 @@ void rtc_debug(uint8_t argc, char **argv)
   printf("RTC date: %s\n", getDayName(sDate.WeekDay));
   printf(" - %04d-%02d-%02d ", 2000 +sDate.Year, sDate.Month, sDate.Date);
   printf("%02d:%02d:%02d\n", sTime.Hours, sTime.Minutes, sTime.Seconds);
+
+  char temp[32];
+  timeToString(HAL_GetTick() / 1000, temp);
+  printf("Up Time: %s\n", temp);
 }
 void rtc_debug(uint8_t argc, char **argv);
 const sTermEntry_t rtcEntry =

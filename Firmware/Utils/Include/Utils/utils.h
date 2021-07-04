@@ -38,9 +38,9 @@
 #define CYAN_B(__x)        COLOR_BOLD(6, __x )
 
 void diag_dump_buf(void *p, uint32_t s);
+void timeToString(uint32_t now, char * string);
 
 #define PRINTF printf
-
 #define printReg(_c)  printf(#_c " : 0x%08X\n", (unsigned int)READ_REG(_c));
 
 #ifdef __cplusplus
